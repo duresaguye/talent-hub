@@ -4,7 +4,7 @@
 
 TalentHub is a comprehensive job portal platform that connects job seekers with employers. The project has been successfully implemented with a modern Next.js frontend and a robust Node.js/Express.js backend.
 
-## ✅ What Has Been Completed
+
 
 ### 🎨 Frontend (Next.js + Tailwind CSS)
 - **Complete UI Components**: Modern, responsive design with shadcn/ui components
