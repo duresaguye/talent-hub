@@ -59,7 +59,7 @@ export default function RegisterPage() {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        userType: formData.userType,
+        role: formData.userType as "EMPLOYER" | "APPLICANT",
       })
       
       if (response.token && response.user) {

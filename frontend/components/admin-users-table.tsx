@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,83 +8,61 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Eye, Edit, Ban, CheckCircle, Mail } from "lucide-react"
-
-// Mock data for all users in the system
-const allSystemUsers = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@email.com",
-    type: "job-seeker",
-    status: "active",
-    joinDate: "2024-01-10",
-    lastActive: "2024-01-16",
-    applications: 5,
-  },
-  {
-    id: 2,
-    name: "John Smith",
-    email: "john@techcorp.com",
-    type: "employer",
-    status: "active",
-    joinDate: "2024-01-05",
-    lastActive: "2024-01-15",
-    jobsPosted: 3,
-  },
-  {
-    id: 3,
-    name: "Michael Chen",
-    email: "michael.chen@email.com",
-    type: "job-seeker",
-    status: "active",
-    joinDate: "2024-01-12",
-    lastActive: "2024-01-16",
-    applications: 8,
-  },
-  {
-    id: 4,
-    name: "Suspicious User",
-    email: "spam@fake.com",
-    type: "employer",
-    status: "suspended",
-    joinDate: "2024-01-16",
-    lastActive: "2024-01-16",
-    jobsPosted: 1,
-  },
-]
+import { useAdmin } from "@/hooks/useAdmin"
+import { User } from "@/lib/api"
 
 export function AdminUsersTable() {
-  const [users, setUsers] = useState(allSystemUsers)
+  const { users, loading, error, pagination, fetchAllUsers, updateUserRole, deleteUser } = useAdmin()
+  const [searchParams, setSearchParams] = useState({
+    role: 'all',
+    search: '',
+    page: 1,
+  })
 
-  const handleSuspendUser = (userId: number) => {
-    setUsers(users.map((user) => (user.id === userId ? { ...user, status: "suspended" } : user)))
+  useEffect(() => {
+    const apiParams = {
+      ...searchParams,
+      role: searchParams.role === 'all' ? '' : searchParams.role,
+    }
+    fetchAllUsers(apiParams)
+  }, [searchParams])
+
+  const handleSuspendUser = async (userId: number) => {
+    // In a real implementation, you would have a suspend user API
+    // For now, we'll just refresh the users list
+    await fetchAllUsers(searchParams)
   }
 
-  const handleActivateUser = (userId: number) => {
-    setUsers(users.map((user) => (user.id === userId ? { ...user, status: "active" } : user)))
+  const handleActivateUser = async (userId: number) => {
+    // In a real implementation, you would have an activate user API
+    // For now, we'll just refresh the users list
+    await fetchAllUsers(searchParams)
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>
-      case "suspended":
-        return <Badge variant="destructive">Suspended</Badge>
-      case "pending":
-        return <Badge variant="secondary">Pending</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const handleUpdateUserRole = async (userId: number, newRole: string) => {
+    const success = await updateUserRole(userId, newRole)
+    if (success) {
+      await fetchAllUsers(searchParams)
     }
   }
 
-  const getUserTypeBadge = (type: string) => {
-    switch (type) {
-      case "job-seeker":
-        return <Badge variant="outline">Job Seeker</Badge>
-      case "employer":
+  const handleDeleteUser = async (userId: number) => {
+    const success = await deleteUser(userId)
+    if (success) {
+      await fetchAllUsers(searchParams)
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case "ADMIN":
+        return <Badge variant="destructive">Admin</Badge>
+      case "EMPLOYER":
         return <Badge variant="secondary">Employer</Badge>
+      case "APPLICANT":
+        return <Badge variant="outline">Job Seeker</Badge>
       default:
-        return <Badge variant="outline">{type}</Badge>
+        return <Badge variant="outline">{role}</Badge>
     }
   }
 
@@ -96,19 +74,61 @@ export function AdminUsersTable() {
       .toUpperCase()
   }
 
+  if (loading && users.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>Loading...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="flex items-center space-x-4">
+                <div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>Error loading users</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => fetchAllUsers(searchParams)}>Try Again</Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>User Management</CardTitle>
-        <CardDescription>Manage all users on the TalentHub platform</CardDescription>
+        <CardDescription>
+          {pagination ? `${pagination.totalUsers} users found` : 'Manage all users on the TalentHub platform'}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Join Date</TableHead>
               <TableHead>Last Active</TableHead>
               <TableHead>Activity</TableHead>
@@ -117,39 +137,36 @@ export function AdminUsersTable() {
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id} className={user.status === "suspended" ? "bg-red-50 dark:bg-red-950/20" : ""}>
+              <TableRow key={user.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getInitials(`${user.firstName} ${user.lastName}`)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{`${user.firstName} ${user.lastName}`}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{getUserTypeBadge(user.type)}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(user.lastActive).toLocaleDateString()}</TableCell>
+                <TableCell>{getRoleBadge(user.role)}</TableCell>
+                <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(user.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  {user.type === "job-seeker" && <span className="text-sm">{user.applications} applications</span>}
-                  {user.type === "employer" && <span className="text-sm">{user.jobsPosted} jobs posted</span>}
+                  {user.role === "APPLICANT" && (
+                    <span className="text-sm">{user.applicationsCount || 0} applications</span>
+                  )}
+                  {user.role === "EMPLOYER" && (
+                    <span className="text-sm">{user.jobsCount || 0} jobs posted</span>
+                  )}
+                  {user.role === "ADMIN" && (
+                    <span className="text-sm">Administrator</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {user.status === "suspended" ? (
-                      <Button size="sm" onClick={() => handleActivateUser(user.id)}>
-                        <CheckCircle className="mr-1 h-3 w-3" />
-                        Activate
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="destructive" onClick={() => handleSuspendUser(user.id)}>
-                        <Ban className="mr-1 h-3 w-3" />
-                        Suspend
-                      </Button>
-                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -169,6 +186,26 @@ export function AdminUsersTable() {
                           <Mail className="mr-2 h-4 w-4" />
                           Send Message
                         </DropdownMenuItem>
+                        {user.role !== "ADMIN" && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "ADMIN")}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Make Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "EMPLOYER")}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Make Employer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "APPLICANT")}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Make Applicant
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteUser(user.id)}>
+                              <Ban className="mr-2 h-4 w-4" />
+                              Delete User
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -177,6 +214,31 @@ export function AdminUsersTable() {
             ))}
           </TableBody>
         </Table>
+        
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="mt-6 flex justify-center">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setSearchParams(prev => ({ ...prev, page: prev.page - 1 }))}
+                disabled={!pagination.hasPrev}
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-4 text-sm">
+                Page {pagination.currentPage} of {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setSearchParams(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={!pagination.hasNext}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -1,26 +1,105 @@
-import { useState, useEffect } from 'react';
-import { apiClient, Job, JobsResponse, JobsQueryParams, CreateJobData, UpdateJobData, Application, ApplicationsResponse } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react'
+import { apiClient, Job, JobsResponse } from '@/lib/api'
 
-export const useJobs = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null);
+export function useJobs() {
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null)
 
-  const fetchJobs = async (params: JobsQueryParams = {}) => {
+  const fetchJobs = async (params: {
+    page?: number
+    limit?: number
+    search?: string
+    type?: string
+    location?: string
+    remote?: boolean
+    status?: string
+  } = {}) => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.getJobs(params);
-      setJobs(response.jobs);
-      setPagination(response.pagination);
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.getJobs(params)
+      setJobs(response.jobs)
+      setPagination(response.pagination)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+      setError(err instanceof Error ? err.message : 'Failed to fetch jobs')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const fetchJob = async (id: number) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.getJob(id)
+      return response.job
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch job')
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createJob = async (jobData: {
+    title: string
+    company: string
+    location: string
+    type: string
+    salary?: string
+    description: string
+    requirements?: string
+    benefits?: string
+    remote?: boolean
+  }) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.createJob(jobData)
+      // Refresh jobs list
+      await fetchJobs()
+      return response.job
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create job')
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateJob = async (id: number, jobData: Partial<Job>) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.updateJob(id, jobData)
+      // Refresh jobs list
+      await fetchJobs()
+      return response.job
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update job')
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteJob = async (id: number) => {
+    try {
+      setLoading(true)
+      setError(null)
+      await apiClient.deleteJob(id)
+      // Refresh jobs list
+      await fetchJobs()
+      return true
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete job')
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return {
     jobs,
@@ -28,125 +107,36 @@ export const useJobs = () => {
     error,
     pagination,
     fetchJobs,
-  };
-};
+    fetchJob,
+    createJob,
+    updateJob,
+    deleteJob,
+  }
+}
 
-export const useJob = (id: number) => {
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useMyJobs() {
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null)
 
-  const fetchJob = async () => {
+  const fetchMyJobs = async (params: {
+    page?: number
+    limit?: number
+    status?: string
+  } = {}) => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.getJob(id);
-      setJob(response.job);
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.getMyJobs(params)
+      setJobs(response.jobs)
+      setPagination(response.pagination)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch job');
+      setError(err instanceof Error ? err.message : 'Failed to fetch jobs')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-  useEffect(() => {
-    if (id) {
-      fetchJob();
-    }
-  }, [id]);
-
-  return {
-    job,
-    loading,
-    error,
-    refetch: fetchJob,
-  };
-};
-
-export const useEmployerJobs = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null);
-  const { user } = useAuth();
-
-  const fetchMyJobs = async (params: { page?: number; limit?: number; status?: string } = {}) => {
-    if (user?.role !== 'EMPLOYER') {
-      setError('Only employers can access this feature');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.getMyJobs(params);
-      setJobs(response.jobs);
-      setPagination(response.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch your jobs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const createJob = async (jobData: CreateJobData) => {
-    if (user?.role !== 'EMPLOYER') {
-      throw new Error('Only employers can create jobs');
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.createJob(jobData);
-      // Refresh the jobs list
-      await fetchMyJobs();
-      return response;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create job');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateJob = async (id: number, jobData: UpdateJobData) => {
-    if (user?.role !== 'EMPLOYER') {
-      throw new Error('Only employers can update jobs');
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.updateJob(id, jobData);
-      // Refresh the jobs list
-      await fetchMyJobs();
-      return response;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update job');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteJob = async (id: number) => {
-    if (user?.role !== 'EMPLOYER') {
-      throw new Error('Only employers can delete jobs');
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      await apiClient.deleteJob(id);
-      // Refresh the jobs list
-      await fetchMyJobs();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete job');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
   return {
     jobs,
@@ -154,82 +144,37 @@ export const useEmployerJobs = () => {
     error,
     pagination,
     fetchMyJobs,
-    createJob,
-    updateJob,
-    deleteJob,
-  };
-};
+  }
+}
 
-export const useApplications = () => {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<ApplicationsResponse['pagination'] | null>(null);
+export function useJob(id: number) {
+  const [job, setJob] = useState<Job | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const fetchMyApplications = async (params: any = {}) => {
+  const fetchJob = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.getMyApplications(params);
-      setApplications(response.applications);
-      setPagination(response.pagination);
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.getJob(id)
+      setJob(response.job)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch applications');
+      setError(err instanceof Error ? err.message : 'Failed to fetch job')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  useEffect(() => {
+    if (id) {
+      fetchJob()
+    }
+  }, [id])
 
   return {
-    applications,
+    job,
     loading,
     error,
-    pagination,
-    fetchMyApplications,
-  };
-};
-
-export const useJobApplications = (jobId: number) => {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<ApplicationsResponse['pagination'] | null>(null);
-
-  const fetchJobApplications = async (params: any = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiClient.getJobApplications(jobId, params);
-      setApplications(response.applications);
-      setPagination(response.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch job applications');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateApplicationStatus = async (applicationId: number, status: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await apiClient.updateApplicationStatus(applicationId, status);
-      // Refresh the applications list
-      await fetchJobApplications();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update application status');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    applications,
-    loading,
-    error,
-    pagination,
-    fetchJobApplications,
-    updateApplicationStatus,
-  };
-};
+    refetch: fetchJob,
+  }
+}

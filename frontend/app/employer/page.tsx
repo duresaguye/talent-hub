@@ -9,8 +9,8 @@ import { EmployerSidebar } from "@/components/employer-sidebar"
 import { PostJobForm } from "@/components/post-job-form"
 import { MyJobsTable } from "@/components/my-jobs-table"
 import { ApplicationsTable } from "@/components/applications-table"
-import { Users, Briefcase, Eye, TrendingUp,  Star } from "lucide-react"
-import { useEmployerJobs } from "@/hooks/useJobs"
+import { Users, Briefcase, Eye, TrendingUp, Star } from "lucide-react"
+import { useMyJobs } from "@/hooks/useJobs"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 
@@ -18,7 +18,7 @@ export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const { user } = useAuth()
   const router = useRouter()
-  const { jobs, loading: jobsLoading, error: jobsError, fetchMyJobs } = useEmployerJobs()
+  const { jobs, loading: jobsLoading, error: jobsError, fetchMyJobs } = useMyJobs()
   const [dashboardStats, setDashboardStats] = useState({
     totalJobs: 0,
     activeJobs: 0,

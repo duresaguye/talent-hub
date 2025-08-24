@@ -31,11 +31,10 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const response = await apiClient.login({ email, password })
+      const response = await apiClient.login(email, password)
       
       if (response.token && response.user) {
         login(response.user, response.token)
-        
         // Redirect based on user role
         if (response.user.role === 'EMPLOYER') {
           router.push('/employer')

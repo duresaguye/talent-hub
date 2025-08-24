@@ -8,8 +8,9 @@ import { Progress } from "@/components/ui/progress"
 import { Navbar } from "@/components/navbar"
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
 import { MyApplicationsTable } from "@/components/my-applications-table"
-import { Briefcase, Clock, CheckCircle, XCircle, TrendingUp, User,  Star } from "lucide-react"
-import { useApplications, useJobs } from "@/hooks/useJobs"
+import { Briefcase, Clock, CheckCircle, XCircle, TrendingUp, User, Star } from "lucide-react"
+import { useJobs } from "@/hooks/useJobs"
+import { useApplications } from "@/hooks/useApplications"
 import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -214,7 +215,11 @@ export default function ApplicantDashboard() {
                               {application.status === "REJECTED" && `Application rejected for ${application.job?.title || 'Job'} at ${application.job?.company || 'Company'}`}
                               {application.status === "REVIEWED" && `Application reviewed for ${application.job?.title || 'Job'} at ${application.job?.company || 'Company'}`}
                             </p>
-                            <p className="text-xs text-muted-foreground">{application.appliedDate}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {application.createdAt
+                                ? new Date(application.createdAt).toLocaleDateString()
+                                : ''}
+                            </p>
                           </div>
                         </div>
                       ))}
