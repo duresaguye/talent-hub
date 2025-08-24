@@ -1,0 +1,104 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        Int           @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String        @unique
+  password  String
+  role      UserRole      @default(APPLICANT)
+  phone     String?
+  location  String?
+  company String?
+  experience String?
+  currentRole String?
+  expectedSalary String?
+  availableDate DateTime?
+  portfolio String?
+  linkedin String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  // Relations
+  jobs         Job[]         @relation("EmployerJobs")
+  applications Application[]
+  
+  @@map("users")
+}
+
+model Job {
+  id          Int           @id @default(autoincrement())
+  title       String
+  company     String
+  location    String
+  type        JobType
+  salary      String?
+  description String
+  requirements String?
+  benefits    String?
+  remote      Boolean       @default(false)
+  status      JobStatus     @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  createdBy   User          @relation("EmployerJobs", fields: [employerId], references: [id])
+  employerId  Int
+  applications Application[]
+  
+  @@map("jobs")
+}
+
+model Application {
+  id            Int              @id @default(autoincrement())
+  status        ApplicationStatus @default(APPLIED)
+  coverLetter   String?
+  resumePath    String?
+  coverLetterPath String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  // Relations
+  job          Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId        Int
+  applicant    User             @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  applicantId  Int
+  
+  @@unique([jobId, applicantId])
+  @@map("applications")
+}
+
+enum UserRole {
+  APPLICANT
+  EMPLOYER
+  ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum JobStatus {
+  ACTIVE
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
