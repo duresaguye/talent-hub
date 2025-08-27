@@ -89,7 +89,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        userType: formData.userType,
+        role: formData.role,
       }),
     });
 

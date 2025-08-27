@@ -96,7 +96,7 @@ Register a new user.
   "lastName": "Doe",
   "email": "john@example.com",
   "password": "password123",
-  "userType": "employer",
+  "role": "employer",
   "phone": "+1234567890",
   "location": "New York, NY",
   "experience": "5+ years",

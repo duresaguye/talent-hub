@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiClient, Job, JobsResponse } from '@/lib/api'
 
 export function useJobs() {
@@ -7,7 +7,7 @@ export function useJobs() {
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null)
 
-  const fetchJobs = async (params: {
+  const fetchJobs = useCallback(async (params: {
     page?: number
     limit?: number
     search?: string
@@ -27,9 +27,9 @@ export function useJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchJob = async (id: number) => {
+  const fetchJob = useCallback(async (id: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -41,9 +41,9 @@ export function useJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const createJob = async (jobData: {
+  const createJob = useCallback(async (jobData: {
     title: string
     company: string
     location: string
@@ -67,9 +67,9 @@ export function useJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchJobs])
 
-  const updateJob = async (id: number, jobData: Partial<Job>) => {
+  const updateJob = useCallback(async (id: number, jobData: Partial<Job>) => {
     try {
       setLoading(true)
       setError(null)
@@ -83,9 +83,9 @@ export function useJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchJobs])
 
-  const deleteJob = async (id: number) => {
+  const deleteJob = useCallback(async (id: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -99,7 +99,7 @@ export function useJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchJobs])
 
   return {
     jobs,

@@ -121,8 +121,8 @@ function Carousel({
       <div
         onKeyDownCapture={handleKeyDown}
         className={cn("relative", className)}
-        role="region"
-        aria-roledescription="carousel"
+        userType="region"
+        aria-userTypedescription="carousel"
         data-slot="carousel"
         {...props}
       >
@@ -158,8 +158,8 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
 
   return (
     <div
-      role="group"
-      aria-roledescription="slide"
+      userType="group"
+      aria-userTypedescription="slide"
       data-slot="carousel-item"
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",

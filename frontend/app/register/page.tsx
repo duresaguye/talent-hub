@@ -22,7 +22,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    userType: "",
+    role: "", // "applicant" | "employer"
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -54,12 +54,13 @@ export default function RegisterPage() {
     setError("")
 
     try {
+      const userType = (formData.role || 'applicant') as 'applicant' | 'employer'
       const response = await apiClient.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        role: formData.userType as "EMPLOYER" | "APPLICANT",
+        role: userType === 'employer' ? 'EMPLOYER' : 'APPLICANT',
       })
       
       if (response.token && response.user) {
@@ -68,6 +69,8 @@ export default function RegisterPage() {
         // Redirect based on user role
         if (response.user.role === 'EMPLOYER') {
           router.push('/employer')
+        } else if (response.user.role === 'ADMIN') {
+          router.push('/admin')
         } else {
           router.push('/applicant')
         }
@@ -146,13 +149,13 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="userType">I am a</Label>
-                <Select value={formData.userType} onValueChange={(value) => handleInputChange("userType", value)}>
+                <Label htmlFor="role">I am a</Label>
+                <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="job-seeker">Job Seeker</SelectItem>
+                    <SelectItem value="applicant">Job Seeker</SelectItem>
                     <SelectItem value="employer">Employer</SelectItem>
                   </SelectContent>
                 </Select>

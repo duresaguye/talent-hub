@@ -1,71 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Eye, Edit, Trash2, Users } from "lucide-react"
+import { useMyJobs } from "@/hooks/useJobs"
 
-// Mock data for employer's jobs
-const employerJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    location: "San Francisco, CA",
-    type: "Full-time",
-    status: "active",
-    applications: 24,
-    postedDate: "2024-01-15",
-    salary: "$120k - $160k",
-  },
-  {
-    id: 2,
-    title: "Product Manager",
-    location: "New York, NY",
-    type: "Full-time",
-    status: "active",
-    applications: 18,
-    postedDate: "2024-01-12",
-    salary: "$130k - $180k",
-  },
-  {
-    id: 3,
-    title: "UX Designer",
-    location: "Remote",
-    type: "Contract",
-    status: "paused",
-    applications: 12,
-    postedDate: "2024-01-10",
-    salary: "$80k - $110k",
-  },
-  {
-    id: 4,
-    title: "Backend Developer",
-    location: "Austin, TX",
-    type: "Full-time",
-    status: "closed",
-    applications: 31,
-    postedDate: "2024-01-05",
-    salary: "$100k - $140k",
-  },
-]
+export function MyJobsTable({ onSelectJob }: { onSelectJob?: (id: number) => void }) {
+  const { jobs, loading, error, fetchMyJobs } = useMyJobs()
 
-export function MyJobsTable() {
-  const [jobs, setJobs] = useState(employerJobs)
-
-  const handleDeleteJob = (jobId: number) => {
-    setJobs(jobs.filter((job) => job.id !== jobId))
-  }
+  useEffect(() => {
+    fetchMyJobs()
+  }, [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return <Badge className="bg-green-100 text-green-800">Active</Badge>
-      case "paused":
-        return <Badge variant="secondary">Paused</Badge>
-      case "closed":
+      case "DRAFT":
+        return <Badge variant="secondary">Draft</Badge>
+      case "CLOSED":
         return <Badge variant="outline">Closed</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -106,10 +63,10 @@ export function MyJobsTable() {
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    {job.applications}
+                    {job.applicationsCount}
                   </div>
                 </TableCell>
-                <TableCell>{new Date(job.postedDate).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(job.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -126,11 +83,11 @@ export function MyJobsTable() {
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Job
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onSelectJob?.(job.id)}>
                         <Users className="mr-2 h-4 w-4" />
                         View Applications
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteJob(job.id)}>
+                      <DropdownMenuItem className="text-destructive">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete Job
                       </DropdownMenuItem>

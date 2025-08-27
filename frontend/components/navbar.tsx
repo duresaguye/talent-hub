@@ -33,7 +33,7 @@ export function Navbar() {
     window.location.href = '/'
   }
 
-  // Navigation items based on authentication and role
+  // Navigation items based on authentication and userType
   const getNavigationItems = () => {
     if (!isAuthenticated) {
       // Not logged in: Only Jobs
@@ -42,8 +42,8 @@ export function Navbar() {
       ]
     }
 
-    // Logged in users: Show role-specific navigation
-    switch (user?.role) {
+    // Logged in users: Show userType-specific navigation
+    switch (user?.userType) {
       case 'EMPLOYER':
         return [
           { href: "/employer", label: "Dashboard" }, // Only EMPLOYER sees Dashboard
@@ -110,11 +110,11 @@ export function Navbar() {
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user?.firstName} {user?.lastName}</p>
                         <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                        <p className="text-xs leading-none text-muted-foreground capitalize">{user?.role}</p>
+                        <p className="text-xs leading-none text-muted-foreground capitalize">{user?.userType}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {user?.role === 'EMPLOYER' && (
+                    {user?.userType === 'EMPLOYER' && (
                       <DropdownMenuItem asChild>
                         <Link href="/employer" className="flex items-center">
                           <Briefcase className="mr-2 h-4 w-4" />
@@ -122,7 +122,7 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    {user?.role === 'APPLICANT' && (
+                    {user?.userType === 'APPLICANT' && (
                       <DropdownMenuItem asChild>
                         <Link href="/applicant" className="flex items-center">
                           <UserCheck className="mr-2 h-4 w-4" />
@@ -130,7 +130,7 @@ export function Navbar() {
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    {user?.role === 'ADMIN' && (
+                    {user?.userType === 'ADMIN' && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin" className="flex items-center">
                           <User className="mr-2 h-4 w-4" />
@@ -204,7 +204,7 @@ export function Navbar() {
                           <div className="space-y-2">
                             <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
                             <p className="text-xs text-muted-foreground">{user?.email}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{user?.userType}</p>
                           </div>
                         </div>
                         
@@ -213,7 +213,7 @@ export function Navbar() {
                             Quick Actions
                           </h3>
                           <div className="space-y-2">
-                            {user?.role === 'EMPLOYER' && (
+                            {user?.userType === 'EMPLOYER' && (
                               <Link
                                 href="/employer"
                                 className="flex items-center py-2 text-foreground/70 hover:text-primary font-medium transition-colors duration-200"
@@ -223,7 +223,7 @@ export function Navbar() {
                                 Employer Dashboard
                               </Link>
                             )}
-                            {user?.role === 'APPLICANT' && (
+                            {user?.userType === 'APPLICANT' && (
                               <Link
                                 href="/applicant"
                                 className="flex items-center py-2 text-foreground/70 hover:text-primary font-medium transition-colors duration-200"
@@ -233,7 +233,7 @@ export function Navbar() {
                                 Applicant Dashboard
                               </Link>
                             )}
-                            {user?.role === 'ADMIN' && (
+                            {user?.userType === 'ADMIN' && (
                               <Link
                                 href="/admin"
                                 className="flex items-center py-2 text-foreground/70 hover:text-primary font-medium transition-colors duration-200"

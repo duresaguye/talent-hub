@@ -33,7 +33,7 @@ router.get("/profile", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json({ user });
+    res.json({ user: { ...user, userType: user.role } });
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({
@@ -103,7 +103,7 @@ router.put("/profile", async (req, res) => {
 
     res.json({
       message: "Profile updated successfully",
-      user: updatedUser,
+      user: { ...updatedUser, userType: updatedUser.role },
     });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -221,6 +221,7 @@ router.get("/", authenticateToken, requireAdmin, async (req, res) => {
 
     const transformedUsers = users.map((user) => ({
       ...user,
+      userType: user.role,
       jobsCount: user._count.jobs,
       applicationsCount: user._count.applications,
       _count: undefined,
@@ -283,6 +284,7 @@ router.get("/:id", authenticateToken, requireAdmin, async (req, res) => {
 
     const transformedUser = {
       ...user,
+      userType: user.role,
       jobsCount: user._count.jobs,
       applicationsCount: user._count.applications,
       _count: undefined,
@@ -337,7 +339,7 @@ router.patch("/:id/role", authenticateToken, requireAdmin, async (req, res) => {
 
     res.json({
       message: "User role updated successfully",
-      user: updatedUser,
+      user: { ...updatedUser, userType: updatedUser.role },
     });
   } catch (error) {
     console.error("Update user role error:", error);

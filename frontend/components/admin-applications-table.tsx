@@ -102,11 +102,8 @@ export function AdminApplicationsTable() {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">
-              This feature needs to be implemented with a proper admin endpoint to fetch all applications across all jobs.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Currently, applications are fetched per job. For admin view, we need an endpoint that returns all applications.
-            </p>
+              Comming soon </p>
+            
           </div>
         </CardContent>
       </Card>

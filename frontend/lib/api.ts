@@ -9,6 +9,10 @@ class ApiClient {
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+    this.refreshToken();
+  }
+
+  private refreshToken() {
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('token');
     }
@@ -18,6 +22,9 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    // Refresh token before each request
+    this.refreshToken();
+    
     const url = `${this.baseURL}${endpoint}`;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -34,6 +41,11 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Token expired or invalid, clear it
+        this.logout();
+        throw new Error('Authentication failed. Please login again.');
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }

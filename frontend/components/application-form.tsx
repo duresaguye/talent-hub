@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Upload, FileText, User, Briefcase, CheckCircle, AlertCircle } from "lucide-react"
+import { useApplications } from "@/hooks/useApplications"
+import { toast } from "@/components/ui/use-toast"
 
 interface Job {
   id: number
@@ -52,6 +54,7 @@ export function ApplicationForm({ job, onBack }: ApplicationFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const { applyForJob } = useApplications()
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -64,12 +67,32 @@ export function ApplicationForm({ job, onBack }: ApplicationFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    try {
+      const application = await applyForJob(
+        {
+          jobId: job.id,
+          coverLetter: formData.coverLetter,
+          phone: formData.phone,
+          location: formData.location,
+          experience: formData.experience,
+          currentRole: formData.currentRole,
+          expectedSalary: formData.expectedSalary,
+          availableDate: formData.availableDate,
+          portfolio: formData.portfolio,
+          linkedin: formData.linkedin,
+        },
+        {
+          resume: files.resume || undefined,
+          coverLetterFile: files.coverLetterFile || undefined,
+        }
+      )
+      if (application) {
+        toast({ title: "Application submitted", description: "We’ll notify you on updates." })
+        setIsSubmitted(true)
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isSubmitted) {

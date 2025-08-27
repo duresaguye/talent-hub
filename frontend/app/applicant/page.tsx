@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Navbar } from "@/components/navbar"
 import { ApplicantSidebar } from "@/components/applicant-sidebar"
 import { MyApplicationsTable } from "@/components/my-applications-table"
-import { Briefcase, Clock, CheckCircle, XCircle, TrendingUp, User, Star } from "lucide-react"
+import { Briefcase, Clock, CheckCircle, XCircle, TrendingUp, User } from "lucide-react"
 import { useJobs } from "@/hooks/useJobs"
 import { useApplications } from "@/hooks/useApplications"
 import { useAuth } from "@/contexts/AuthContext"
@@ -17,7 +17,7 @@ import Link from "next/link"
 
 export default function ApplicantDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
-  const { user } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const { applications, loading: applicationsLoading, error: applicationsError, fetchMyApplications } = useApplications()
   const { jobs, loading: jobsLoading, fetchJobs } = useJobs()
@@ -28,40 +28,78 @@ export default function ApplicantDashboard() {
     rejected: 0,
     profileCompletion: 85,
   })
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   useEffect(() => {
+    if (isLoading) return
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
     if (user?.role !== 'APPLICANT') {
       router.push('/unauthorized')
       return
     }
 
     if (activeTab === 'dashboard' || activeTab === 'applications') {
-      fetchMyApplications()
-      fetchJobs({ limit: 3, status: 'ACTIVE' }) // For recommended jobs
-    }
-  }, [user, activeTab])
-
-  useEffect(() => {
-    if (applications.length > 0) {
-      const pending = applications.filter(app => app.status === 'APPLIED').length
-      const shortlisted = applications.filter(app => app.status === 'SHORTLISTED').length
-      const rejected = applications.filter(app => app.status === 'REJECTED').length
-      
-      setDashboardStats({
-        totalApplications: applications.length,
-        pendingApplications: pending,
-        shortlisted,
-        rejected,
-        profileCompletion: 85, // This could be calculated based on profile completeness
+      setIsInitialLoad(true)
+      Promise.all([
+        fetchMyApplications(),
+        fetchJobs({ limit: 3, status: 'ACTIVE' })
+      ]).finally(() => {
+        setIsInitialLoad(false)
       })
     }
-  }, [applications])
+  }, [isLoading, isAuthenticated, user, activeTab, fetchMyApplications, fetchJobs, router])
+
+  useEffect(() => {
+    // Only update stats when not loading and have data or confirmed no data
+    if (!applicationsLoading && !applicationsError) {
+      if (applications.length > 0) {
+        const pending = applications.filter(app => app.status === 'APPLIED').length
+        const shortlisted = applications.filter(app => app.status === 'SHORTLISTED').length
+        const rejected = applications.filter(app => app.status === 'REJECTED').length
+        
+        setDashboardStats({
+          totalApplications: applications.length,
+          pendingApplications: pending,
+          shortlisted,
+          rejected,
+          profileCompletion: 85, // This could be calculated based on profile completeness
+        })
+      } else {
+        // Reset stats when no applications
+        setDashboardStats({
+          totalApplications: 0,
+          pendingApplications: 0,
+          shortlisted: 0,
+          rejected: 0,
+          profileCompletion: 85,
+        })
+      }
+    }
+  }, [applications, applicationsLoading, applicationsError])
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return (
           <div className="space-y-6">
+            {isInitialLoad && (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="mt-2 text-muted-foreground">Loading dashboard data...</p>
+              </div>
+            )}
+            
+            {applicationsError && !isInitialLoad && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-600 mb-2">Error loading applications: {applicationsError}</p>
+                <Button onClick={() => fetchMyApplications()} variant="outline" size="sm">
+                  Try Again
+                </Button>
+              </div>
+            )}
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
@@ -70,8 +108,11 @@ export default function ApplicantDashboard() {
                   <Briefcase className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {applicationsLoading ? (
-                    < Star className="h-8 w-16" />
+                  {isInitialLoad ? (
+                    <div className="space-y-2">
+                      <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
+                      <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.totalApplications}</div>
@@ -87,8 +128,11 @@ export default function ApplicantDashboard() {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {applicationsLoading ? (
-                    < Star className="h-8 w-16" />
+                  {isInitialLoad ? (
+                    <div className="space-y-2">
+                      <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
+                      <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.pendingApplications}</div>
@@ -104,8 +148,11 @@ export default function ApplicantDashboard() {
                   <CheckCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {applicationsLoading ? (
-                    < Star className="h-8 w-16" />
+                  {isInitialLoad ? (
+                    <div className="space-y-2">
+                      <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
+                      <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold text-green-600">{dashboardStats.shortlisted}</div>
@@ -121,8 +168,11 @@ export default function ApplicantDashboard() {
                   <XCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  {applicationsLoading ? (
-                    < Star className="h-8 w-16" />
+                  {isInitialLoad ? (
+                    <div className="space-y-2">
+                      <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
+                      <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold text-red-600">{dashboardStats.rejected}</div>
@@ -134,42 +184,8 @@ export default function ApplicantDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profile Completion */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Profile Completion
-                  </CardTitle>
-                  <CardDescription>Complete your profile to get better job matches</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Profile Strength</span>
-                      <span>{dashboardStats.profileCompletion}%</span>
-                    </div>
-                    <Progress value={dashboardStats.profileCompletion} className="h-2" />
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Basic information added</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>Work experience added</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-yellow-500" />
-                      <span>Add skills and certifications</span>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-transparent" variant="outline">
-                    Complete Profile
-                  </Button>
-                </CardContent>
-              </Card>
+          
+             
 
               {/* Recent Activity */}
               <Card>
@@ -181,24 +197,24 @@ export default function ApplicantDashboard() {
                   <CardDescription>Your latest job search activities</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {applicationsLoading ? (
+                  {isInitialLoad ? (
                     <div className="space-y-4">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                          < Star className="h-4 w-4 mt-1" />
+                          <div className="h-4 w-4 mt-1 bg-muted animate-pulse rounded"></div>
                           <div className="flex-1 space-y-2">
-                            < Star className="h-4 w-full" />
-                            < Star className="h-3 w-24" />
+                            <div className="h-4 w-full bg-muted animate-pulse rounded"></div>
+                            <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  ) : applicationsError ? (
+                  ) : applicationsError && !isInitialLoad ? (
                     <div className="text-center py-8">
                       <p className="text-red-600 mb-4">{applicationsError}</p>
                       <Button onClick={() => fetchMyApplications()}>Try Again</Button>
                     </div>
-                  ) : applications.length > 0 ? (
+                  ) : !isInitialLoad && applications.length > 0 ? (
                     <div className="space-y-4">
                       {applications.slice(0, 4).map((application) => (
                         <div key={application.id} className="flex items-start gap-3 p-3 rounded-lg border">
@@ -224,14 +240,14 @@ export default function ApplicantDashboard() {
                         </div>
                       ))}
                     </div>
-                  ) : (
+                  ) : !isInitialLoad ? (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">No applications yet</p>
                       <Button asChild>
                         <Link href="/jobs">Browse Jobs</Link>
                       </Button>
                     </div>
-                  )}
+                  ) : null}
                 </CardContent>
               </Card>
             </div>
@@ -243,24 +259,24 @@ export default function ApplicantDashboard() {
                 <CardDescription>Jobs that match your profile and preferences</CardDescription>
               </CardHeader>
               <CardContent>
-                {jobsLoading ? (
+                {isInitialLoad ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div key={index} className="p-4 border rounded-lg space-y-3">
                         <div className="space-y-2">
-                          < Star className="h-4 w-32" />
-                          < Star className="h-3 w-24" />
-                          < Star className="h-3 w-20" />
+                          <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+                          <div className="h-3 w-24 bg-muted animate-pulse rounded"></div>
+                          <div className="h-3 w-20 bg-muted animate-pulse rounded"></div>
                         </div>
                         <div className="space-y-2">
-                          < Star className="h-4 w-20" />
-                          < Star className="h-6 w-16" />
+                          <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
+                          <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
                         </div>
-                        < Star className="h-8 w-full" />
+                        <div className="h-8 w-full bg-muted animate-pulse rounded"></div>
                       </div>
                     ))}
                   </div>
-                ) : jobs.length > 0 ? (
+                ) : !isInitialLoad && jobs.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {jobs.slice(0, 3).map((job) => (
                       <div key={job.id} className="p-4 border rounded-lg space-y-3">
@@ -286,14 +302,14 @@ export default function ApplicantDashboard() {
                       </div>
                     ))}
                   </div>
-                ) : (
+                ) : !isInitialLoad ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground mb-4">No recommended jobs available</p>
                     <Button asChild>
                       <Link href="/jobs">Browse All Jobs</Link>
                     </Button>
                   </div>
-                )}
+                ) : null}
                 <div className="mt-4">
                   <Button variant="outline" asChild className="w-full bg-transparent">
                     <Link href="/jobs">View More Jobs</Link>

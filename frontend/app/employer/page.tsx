@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation"
 
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [selectedJobId, setSelectedJobId] = useState<number | undefined>(undefined)
   const { user } = useAuth()
   const router = useRouter()
   const { jobs, loading: jobsLoading, error: jobsError, fetchMyJobs } = useMyJobs()
@@ -206,10 +207,10 @@ export default function EmployerDashboard() {
         return <PostJobForm />
 
       case "my-jobs":
-        return <MyJobsTable />
+        return <MyJobsTable onSelectJob={(id) => { setSelectedJobId(id); setActiveTab('applications') }} />
 
       case "applications":
-        return <ApplicationsTable />
+        return <ApplicationsTable jobId={selectedJobId} />
 
       default:
         return null

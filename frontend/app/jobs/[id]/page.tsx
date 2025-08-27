@@ -17,7 +17,8 @@ import Link from "next/link"
 export default function JobDetailsPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+ 
+  const { user, isAuthenticated, isLoading } = useAuth()
   const [showApplicationForm, setShowApplicationForm] = useState(false)
 
   const jobId = Number.parseInt(params.id as string)
@@ -197,18 +198,20 @@ export default function JobDetailsPage() {
                 <CardDescription>Join {job.company} and take your career to the next level</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {user?.role === 'APPLICANT' ? (
-                  <Button size="lg" className="w-full" onClick={() => setShowApplicationForm(true)}>
-                    Apply for This Position
-                  </Button>
-                ) : user?.role === 'EMPLOYER' ? (
-                  <Button size="lg" variant="outline" className="w-full" disabled>
-                    Employers cannot apply
-                  </Button>
-                ) : (
-                  <Button size="lg" variant="outline" asChild className="w-full">
-                    <Link href="/login">Login to Apply</Link>
-                  </Button>
+              {isLoading ? (
+  <Button size="lg" variant="outline" className="w-full" disabled>Loading...</Button>
+) : isAuthenticated && user?.role === 'APPLICANT' ? (
+  <Button size="lg" className="w-full" onClick={() => setShowApplicationForm(true)}>
+    Apply for This Position
+  </Button>
+) : isAuthenticated && user?.role !== 'APPLICANT' ? (
+  <Button size="lg" variant="outline" className="w-full" disabled>
+    {user?.role === 'EMPLOYER' ? 'Employers cannot apply' : 'Not eligible to apply'}
+  </Button>
+) : (
+  <Button size="lg" variant="outline" asChild className="w-full">
+    <Link href="/login">Login to Apply</Link>
+  </Button>
                 )}
                 <Button variant="outline" size="lg" className="w-full bg-transparent">
                   Save Job

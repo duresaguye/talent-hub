@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { apiClient, Application, ApplicationsResponse } from '@/lib/api'
 
 export function useApplications() {
@@ -7,7 +7,7 @@ export function useApplications() {
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<ApplicationsResponse['pagination'] | null>(null)
 
-  const fetchMyApplications = async (params: {
+  const fetchMyApplications = useCallback(async (params: {
     page?: number
     limit?: number
     status?: string
@@ -23,9 +23,9 @@ export function useApplications() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchJobApplications = async (jobId: number, params: {
+  const fetchJobApplications = useCallback(async (jobId: number, params: {
     page?: number
     limit?: number
     status?: string
@@ -41,9 +41,9 @@ export function useApplications() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const applyForJob = async (applicationData: {
+  const applyForJob = useCallback(async (applicationData: {
     jobId: number
     coverLetter?: string
     phone?: string
@@ -66,9 +66,9 @@ export function useApplications() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const updateApplicationStatus = async (id: number, status: string) => {
+  const updateApplicationStatus = useCallback(async (id: number, status: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -82,9 +82,9 @@ export function useApplications() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchJobApplications])
 
-  const getApplication = async (id: number) => {
+  const getApplication = useCallback(async (id: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -96,7 +96,7 @@ export function useApplications() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   return {
     applications,

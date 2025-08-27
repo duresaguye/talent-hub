@@ -5,7 +5,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "public"."UserRole" AS ENUM ('APPLICANT', 'EMPLOYER', 'ADMIN');
+CREATE TYPE "public"."UseruserType" AS ENUM ('APPLICANT', 'EMPLOYER', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "public"."JobType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP');
@@ -26,12 +26,12 @@ CREATE TABLE "public"."users" (
     "lastName" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "public"."UserRole" NOT NULL DEFAULT 'APPLICANT',
+    "userType" "public"."UseruserType" NOT NULL DEFAULT 'APPLICANT',
     "phone" TEXT,
     "location" TEXT,
     "company" TEXT,
     "experience" TEXT,
-    "currentRole" TEXT,
+    "currentuserType" TEXT,
     "expectedSalary" TEXT,
     "availableDate" TIMESTAMP(3),
     "portfolio" TEXT,

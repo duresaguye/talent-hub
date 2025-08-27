@@ -14,7 +14,6 @@ router.post("/register", async (req, res) => {
       lastName,
       email,
       password,
-      userType,
       phone,
       location,
       experience,
@@ -23,10 +22,14 @@ router.post("/register", async (req, res) => {
       availableDate,
       portfolio,
       linkedin,
+      userType, // preferred from frontend
+      role: legacyRole, // gracefully support legacy clients
     } = req.body;
 
+    const incomingType = (userType ?? legacyRole)?.toString().toLowerCase();
+
     // Validation
-    if (!firstName || !lastName || !email || !password || !userType) {
+    if (!firstName || !lastName || !email || !password || !incomingType) {
       return res.status(400).json({
         error: "Missing required fields",
         required: ["firstName", "lastName", "email", "password", "userType"],
@@ -54,8 +57,13 @@ router.post("/register", async (req, res) => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Map userType to role
-    const role = userType === "employer" ? "EMPLOYER" : "APPLICANT";
+    // Map to internal role
+    const role =
+      incomingType === "employer"
+        ? "EMPLOYER"
+        : incomingType === "admin"
+        ? "ADMIN"
+        : "APPLICANT";
 
     // Create user
     const user = await prisma.user.create({
@@ -101,7 +109,7 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({
       message: "User registered successfully",
-      user,
+      user: { ...user, userType: user.role },
       token,
     });
   } catch (error) {
@@ -112,6 +120,7 @@ router.post("/register", async (req, res) => {
     });
   }
 });
+
 
 // User Login
 router.post("/login", async (req, res) => {
@@ -159,6 +168,7 @@ router.post("/login", async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
+      userType: user.role,
       phone: user.phone,
       location: user.location,
       experience: user.experience,

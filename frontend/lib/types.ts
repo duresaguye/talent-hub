@@ -40,7 +40,7 @@ export interface Application {
     phone?: string;
     location?: string;
     experience?: string;
-    currentRole?: string;
+    currentuserType?: string;
     expectedSalary?: string;
     availableDate?: string;
     portfolio?: string;
@@ -53,11 +53,11 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'ADMIN' | 'EMPLOYER' | 'APPLICANT';
+  userType: 'ADMIN' | 'EMPLOYER' | 'APPLICANT';
   phone?: string;
   location?: string;
   experience?: string;
-  currentRole?: string;
+  currentuserType?: string;
   expectedSalary?: string;
   availableDate?: string;
   portfolio?: string;
@@ -95,7 +95,7 @@ export interface StatsResponse {
     totalUsers: number;
     totalJobs: number;
     totalApplications: number;
-    usersByRole: Record<string, number>;
+    usersByuserType: Record<string, number>;
     jobsByStatus: Record<string, number>;
     applicationsByStatus: Record<string, number>;
   };

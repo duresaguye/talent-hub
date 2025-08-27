@@ -3,6 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
+import { apiClient } from "@/lib/api"
+import { toast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -32,13 +34,37 @@ export function PostJobForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const payload = {
+        title: formData.title,
+        company: formData.company,
+        location: formData.location,
+        type: formData.type,
+        salary: formData.salary || undefined,
+        description: formData.description,
+        requirements: formData.requirements || undefined,
+        benefits: formData.benefits || undefined,
+        remote: formData.remote,
+      }
+      await apiClient.createJob(payload)
+      toast({ title: "Job posted", description: "Your job was posted successfully." })
+      // reset form on success
+      setFormData({
+        title: "",
+        company: "",
+        location: "",
+        type: "",
+        salary: "",
+        description: "",
+        requirements: "",
+        benefits: "",
+        remote: false,
+      })
+    } catch (err) {
+      console.error("Failed to create job", err)
+    } finally {
       setIsLoading(false)
-      console.log("Job posted:", formData)
-      // Reset form or redirect
-    }, 1000)
+    }
   }
 
   return (
@@ -90,10 +116,10 @@ export function PostJobForm() {
                   <SelectValue placeholder="Select job type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Full-time">Full-time</SelectItem>
-                  <SelectItem value="Part-time">Part-time</SelectItem>
-                  <SelectItem value="Contract">Contract</SelectItem>
-                  <SelectItem value="Internship">Internship</SelectItem>
+                  <SelectItem value="FULL_TIME">Full-time</SelectItem>
+                  <SelectItem value="PART_TIME">Part-time</SelectItem>
+                  <SelectItem value="CONTRACT">Contract</SelectItem>
+                  <SelectItem value="INTERNSHIP">Internship</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: string;
+  requiredRole?: string; // e.g. 'APPLICANT' | 'EMPLOYER' | 'ADMIN'
   fallback?: React.ReactNode;
 }
 
@@ -19,10 +19,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return; // wait for auth to load
+
+    if (!isAuthenticated) {
       router.push('/login');
-    } else if (!isLoading && requiredRole && user?.role !== requiredRole) {
-      router.push('/unauthorized');
+      return;
+    }
+
+    if (requiredRole) {
+      const have = (user?.role || '').toUpperCase();
+      const need = requiredRole.toUpperCase();
+      if (have !== need) {
+        router.push('/unauthorized');
+        return;
+      }
     }
   }, [isAuthenticated, user, requiredRole, isLoading, router]);
 
@@ -37,12 +47,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
-    return fallback;
-  }
+  if (!isAuthenticated) return fallback;
 
-  if (requiredRole && user?.role !== requiredRole) {
-    return fallback;
+  if (requiredRole) {
+    const have = (user?.role || '').toUpperCase();
+    const need = requiredRole.toUpperCase();
+    if (have !== need) return fallback;
   }
 
   return <>{children}</>;
