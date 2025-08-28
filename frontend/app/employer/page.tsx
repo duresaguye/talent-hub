@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation"
 export default function EmployerDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [selectedJobId, setSelectedJobId] = useState<number | undefined>(undefined)
-  const { user } = useAuth()
+  const { user, isLoading, isAuthenticated } = useAuth()
   const router = useRouter()
   const { jobs, loading: jobsLoading, error: jobsError, fetchMyJobs } = useMyJobs()
   const [dashboardStats, setDashboardStats] = useState({
@@ -28,6 +28,13 @@ export default function EmployerDashboard() {
   })
 
   useEffect(() => {
+    if (isLoading) return // Wait for auth to complete
+
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
     if (user?.role !== 'EMPLOYER') {
       router.push('/unauthorized')
       return
@@ -36,12 +43,12 @@ export default function EmployerDashboard() {
     if (activeTab === 'dashboard' || activeTab === 'my-jobs') {
       fetchMyJobs()
     }
-  }, [user, activeTab])
+  }, [user, activeTab, isLoading, isAuthenticated, router, fetchMyJobs])
 
   useEffect(() => {
     if (jobs.length > 0) {
       const activeJobs = jobs.filter(job => job.status === 'ACTIVE')
-      const totalApplications = jobs.reduce((sum, job) => sum + job.applicationsCount, 0)
+      const totalApplications = jobs.reduce((sum, job) => sum + (job.applicationsCount || job._count?.applications || 0), 0)
       
       setDashboardStats({
         totalJobs: jobs.length,
@@ -51,6 +58,18 @@ export default function EmployerDashboard() {
       })
     }
   }, [jobs])
+
+  // Show loading state while authentication is being validated
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -66,7 +85,9 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   {jobsLoading ? (
-                    < Star className="h-8 w-16" />
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-8 w-16 rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.totalJobs}</div>
@@ -83,7 +104,9 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   {jobsLoading ? (
-                    < Star className="h-8 w-16" />
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-8 w-16 rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.activeJobs}</div>
@@ -100,7 +123,9 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   {jobsLoading ? (
-                    < Star className="h-8 w-16" />
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-8 w-16 rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.totalApplications}</div>
@@ -117,7 +142,9 @@ export default function EmployerDashboard() {
                 </CardHeader>
                 <CardContent>
                   {jobsLoading ? (
-                    < Star className="h-8 w-16" />
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-8 w-16 rounded"></div>
+                    </div>
                   ) : (
                     <>
                       <div className="text-2xl font-bold">{dashboardStats.newApplications}</div>
@@ -140,12 +167,12 @@ export default function EmployerDashboard() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="space-y-2">
-                          < Star className="h-4 w-48" />
-                          < Star className="h-3 w-32" />
+                          <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-4 w-48 rounded"></div>
+                          <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-3 w-32 rounded"></div>
                         </div>
                         <div className="flex items-center gap-2">
-                          < Star className="h-6 w-16" />
-                          < Star className="h-8 w-16" />
+                          <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-6 w-16 rounded"></div>
+                          <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-8 w-16 rounded"></div>
                         </div>
                       </div>
                     ))}
@@ -162,7 +189,7 @@ export default function EmployerDashboard() {
                         <div className="space-y-1">
                           <p className="font-medium">{job.title}</p>
                           <p className="text-sm text-muted-foreground">{job.company} • {job.location}</p>
-                          <p className="text-xs text-muted-foreground">Posted {job.postedDate}</p>
+                          <p className="text-xs text-muted-foreground">Posted {new Date(job.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge
@@ -173,9 +200,12 @@ export default function EmployerDashboard() {
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => setActiveTab('applications')}
+                            onClick={() => {
+                              setSelectedJobId(job.id);
+                              setActiveTab('applications');
+                            }}
                           >
-                            View ({job.applicationsCount})
+                            View ({job.applicationsCount || job._count?.applications || 0})
                           </Button>
                         </div>
                       </div>

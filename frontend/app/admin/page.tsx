@@ -11,14 +11,31 @@ import { AdminApplicationsTable } from "@/components/admin-applications-table"
 import { AdminUsersTable } from "@/components/admin-users-table"
 import { Users, Briefcase, FileText, TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import { useAdmin } from "@/hooks/useAdmin"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { stats, loading: statsLoading, error: statsError, fetchStats } = useAdmin()
+  const { stats, activities, loading: statsLoading, error: statsError, fetchStats, fetchActivities } = useAdmin()
+  const { user, isLoading, isAuthenticated } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
+    if (isLoading) return // Wait for auth to complete
+
+    if (!isAuthenticated) {
+      router.push('/login')
+      return
+    }
+
+    if (user?.role !== 'ADMIN') {
+      router.push('/unauthorized')
+      return
+    }
+
     fetchStats()
-  }, [])
+    fetchActivities({ limit: 5 })
+  }, [user, isLoading, isAuthenticated, router])
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -89,53 +106,27 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest platform activities and alerts</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-green-100 rounded-full">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+            {activities.length > 0 ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex items-center space-x-4">
+                  <div className={`w-2 h-2 rounded-full ${activity.color}`}></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground">{activity.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(activity.createdAt).toLocaleDateString()} - {activity.user}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                <p className="text-sm">No recent activities</p>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">New job posted</p>
-                <p className="text-xs text-muted-foreground">Senior Developer at TechCorp</p>
-              </div>
-              <span className="text-xs text-muted-foreground">2 hours ago</span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-100 rounded-full">
-                <Users className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">New user registered</p>
-                <p className="text-xs text-muted-foreground">Sarah Johnson (Job Seeker)</p>
-              </div>
-              <span className="text-xs text-muted-foreground">4 hours ago</span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-yellow-100 rounded-full">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Job flagged for review</p>
-                <p className="text-xs text-muted-foreground">Suspicious job posting detected</p>
-              </div>
-              <span className="text-xs text-muted-foreground">6 hours ago</span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-purple-100 rounded-full">
-                <FileText className="h-4 w-4 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Application submitted</p>
-                <p className="text-xs text-muted-foreground">Michael Chen applied for Product Manager</p>
-              </div>
-              <span className="text-xs text-muted-foreground">8 hours ago</span>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -165,6 +156,18 @@ export default function AdminDashboard() {
       </Card>
     </div>
   )
+
+  // Show loading state while authentication is being validated
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const renderContent = () => {
     switch (activeTab) {

@@ -30,7 +30,7 @@ export default function UnauthorizedPage() {
 
           <CardContent className="text-center space-y-4">
             <p className="text-muted-foreground">
-              Sorry, but you don't have the required userType to view this content. 
+              Sorry, but you don't have the required role to view this content. 
               Please contact an administrator if you believe this is an error.
             </p>
 

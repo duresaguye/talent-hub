@@ -120,7 +120,7 @@ export function useMyJobs() {
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<JobsResponse['pagination'] | null>(null)
 
-  const fetchMyJobs = async (params: {
+  const fetchMyJobs = useCallback(async (params: {
     page?: number
     limit?: number
     status?: string
@@ -136,7 +136,7 @@ export function useMyJobs() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   return {
     jobs,

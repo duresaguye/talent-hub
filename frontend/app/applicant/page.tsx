@@ -50,7 +50,7 @@ export default function ApplicantDashboard() {
         setIsInitialLoad(false)
       })
     }
-  }, [isLoading, isAuthenticated, user, activeTab, fetchMyApplications, fetchJobs, router])
+  }, [isLoading, isAuthenticated, user, activeTab, router])
 
   useEffect(() => {
     // Only update stats when not loading and have data or confirmed no data
@@ -79,6 +79,18 @@ export default function ApplicantDashboard() {
       }
     }
   }, [applications, applicationsLoading, applicationsError])
+
+  // Show loading state while authentication is being validated
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   const renderContent = () => {
     switch (activeTab) {

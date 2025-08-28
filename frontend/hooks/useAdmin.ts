@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import { apiClient, User, UsersResponse, StatsResponse } from '@/lib/api'
+import { useState, useCallback } from 'react'
+import { apiClient, User, UsersResponse, StatsResponse, Activity } from '@/lib/api'
 
 export function useAdmin() {
   const [users, setUsers] = useState<User[]>([])
   const [stats, setStats] = useState<StatsResponse['stats'] | null>(null)
+  const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState<UsersResponse['pagination'] | null>(null)
 
-  const fetchAllUsers = async (params: {
+  const fetchAllUsers = useCallback(async (params: {
     page?: number
     limit?: number
     role?: string
@@ -25,9 +26,9 @@ export function useAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchUser = async (id: number) => {
+  const fetchUser = useCallback(async (id: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -39,9 +40,9 @@ export function useAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const updateUserRole = async (id: number, role: string) => {
+  const updateUserRole = useCallback(async (id: number, role: string) => {
     try {
       setLoading(true)
       setError(null)
@@ -55,9 +56,9 @@ export function useAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchAllUsers])
 
-  const deleteUser = async (id: number) => {
+  const deleteUser = useCallback(async (id: number) => {
     try {
       setLoading(true)
       setError(null)
@@ -71,9 +72,9 @@ export function useAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [fetchAllUsers])
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -84,11 +85,27 @@ export function useAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  const fetchActivities = useCallback(async (params: {
+    limit?: number;
+  } = {}) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await apiClient.getRecentActivities(params)
+      setActivities(response.activities)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch activities')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   return {
     users,
     stats,
+    activities,
     loading,
     error,
     pagination,
@@ -97,5 +114,6 @@ export function useAdmin() {
     updateUserRole,
     deleteUser,
     fetchStats,
+    fetchActivities,
   }
 }

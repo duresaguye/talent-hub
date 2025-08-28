@@ -1,4 +1,4 @@
-import { Job, Application, User, Pagination, JobsResponse, ApplicationsResponse, UsersResponse, StatsResponse } from './types';
+import { Job, Application, User, Pagination, JobsResponse, ApplicationsResponse, UsersResponse, StatsResponse, Activity } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -248,6 +248,28 @@ class ApiClient {
     return this.request<ApplicationsResponse>(`/applications/job/${jobId}?${searchParams.toString()}`);
   }
 
+  // Employer-specific methods
+  async getEmployerJobs(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  } = {}): Promise<JobsResponse> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, value.toString());
+      }
+    });
+    
+    return this.request<JobsResponse>(`/jobs/employer/my-jobs?${searchParams.toString()}`);
+  }
+
+  async withdrawApplication(applicationId: string) {
+    return this.request(`/applications/${applicationId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async updateApplicationStatus(id: number, status: string): Promise<{ message: string; application: Application }> {
     return this.request<{ message: string; application: Application }>(`/applications/${id}/status`, {
       method: 'PATCH',
@@ -315,10 +337,23 @@ class ApiClient {
   async getStats(): Promise<StatsResponse> {
     return this.request<StatsResponse>('/users/stats/overview');
   }
+
+  async getRecentActivities(params: {
+    limit?: number;
+  } = {}): Promise<{ activities: Activity[] }> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value.toString());
+      }
+    });
+    
+    return this.request<{ activities: Activity[] }>(`/auth/activities?${searchParams.toString()}`);
+  }
 }
 
 // Create and export the API client instance
 export const apiClient = new ApiClient(API_BASE_URL);
 
 // Export types for use in components
-export type { Job, Application, User, Pagination, JobsResponse, ApplicationsResponse, UsersResponse, StatsResponse };
+export type { Job, Application, User, Pagination, JobsResponse, ApplicationsResponse, UsersResponse, StatsResponse, Activity };

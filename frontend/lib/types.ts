@@ -4,28 +4,29 @@ export interface Job {
   title: string;
   company: string;
   location: string;
-  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
+  type: string;
   salary?: string;
   description: string;
-  requirements?: string;
-  benefits?: string;
+  requirements: string;
   remote: boolean;
-  status: 'ACTIVE' | 'INACTIVE' | 'DRAFT';
-  postedDate: string;
-  applicationsCount: number;
-  employer?: {
+  status: 'ACTIVE' | 'CLOSED' | 'DRAFT';
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
     id: number;
     firstName: string;
     lastName: string;
-    company?: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  _count?: {
+    applications: number;
+  };
+  applicationsCount?: number;
+  postedDate?: string;
 }
 
 export interface Application {
   id: number;
-  status: 'APPLIED' | 'REVIEWED' | 'SHORTLISTED' | 'REJECTED' | 'HIRED';
+  status: 'APPLIED' | 'REVIEWED' | 'SHORTLISTED' | 'REJECTED' | 'HIRED' | 'PENDING' | 'ACCEPTED';
   coverLetter?: string;
   resumePath?: string;
   coverLetterPath?: string;
@@ -40,7 +41,7 @@ export interface Application {
     phone?: string;
     location?: string;
     experience?: string;
-    currentuserType?: string;
+    currentRole?: string;
     expectedSalary?: string;
     availableDate?: string;
     portfolio?: string;
@@ -53,11 +54,11 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  userType: 'ADMIN' | 'EMPLOYER' | 'APPLICANT';
+  role: 'ADMIN' | 'EMPLOYER' | 'APPLICANT';
   phone?: string;
   location?: string;
   experience?: string;
-  currentuserType?: string;
+  currentRole?: string;
   expectedSalary?: string;
   availableDate?: string;
   portfolio?: string;
@@ -90,12 +91,23 @@ export interface UsersResponse {
   pagination: Pagination & { totalUsers: number };
 }
 
+export interface Activity {
+  id: string;
+  type: 'job_posted' | 'user_registered' | 'application_submitted';
+  title: string;
+  description: string;
+  user: string;
+  createdAt: string;
+  icon: string;
+  color: string;
+}
+
 export interface StatsResponse {
   stats: {
     totalUsers: number;
     totalJobs: number;
     totalApplications: number;
-    usersByuserType: Record<string, number>;
+    usersByRole: Record<string, number>;
     jobsByStatus: Record<string, number>;
     applicationsByStatus: Record<string, number>;
   };

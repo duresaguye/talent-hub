@@ -117,7 +117,7 @@ export function ApplicationsTable({ jobId }: ApplicationsTableProps) {
         <CardContent>
           <Alert>
             <AlertDescription>
-              Please select a job to view its applications.
+              Select a job from "My Jobs" tab to view its applications. Jobs with applications will be shown automatically.
             </AlertDescription>
           </Alert>
         </CardContent>

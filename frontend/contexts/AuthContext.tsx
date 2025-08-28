@@ -32,12 +32,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to check if token is expired
+// Helper function to check if token is expired or expires soon
 const isTokenExpired = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Date.now() / 1000;
-    return payload.exp < currentTime;
+    // Add 5 minute buffer - logout if token expires within 5 minutes
+    const bufferTime = 5 * 60; // 5 minutes in seconds
+    return payload.exp < (currentTime + bufferTime);
   } catch (error) {
     console.error('Error parsing token:', error);
     return true;
@@ -144,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const interval = setInterval(() => {
       validateToken();
-    }, 5 * 60 * 1000); // Check every 5 minutes
+    }, 2 * 60 * 1000); // Check every 2 minutes (more frequent)
 
     return () => clearInterval(interval);
   }, [token, validateToken]);

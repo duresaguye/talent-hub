@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Trash2, Users } from "lucide-react"
+import { MoreHorizontal, Eye, Edit, Trash2, Users, Loader2 } from "lucide-react"
 import { useMyJobs } from "@/hooks/useJobs"
 
 export function MyJobsTable({ onSelectJob }: { onSelectJob?: (id: number) => void }) {
@@ -36,20 +36,38 @@ export function MyJobsTable({ onSelectJob }: { onSelectJob?: (id: number) => voi
         <CardDescription>Manage your active and past job postings</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Job Title</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Applications</TableHead>
-              <TableHead>Posted Date</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {jobs.map((job) => (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span>Loading jobs...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => fetchMyJobs()}>Try Again</Button>
+          </div>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No jobs posted yet</p>
+            <Button onClick={() => window.location.href = '/employer?tab=post-job'}>
+              Post Your First Job
+            </Button>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Job Title</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Applications</TableHead>
+                <TableHead>Posted Date</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {jobs.map((job) => (
               <TableRow key={job.id}>
                 <TableCell>
                   <div>
@@ -95,9 +113,10 @@ export function MyJobsTable({ onSelectJob }: { onSelectJob?: (id: number) => voi
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   )

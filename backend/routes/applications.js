@@ -300,6 +300,15 @@ router.get("/job/:jobId", authenticateToken, requireEmployer, async (req, res) =
               createdAt: true,
             },
           },
+          job: {
+            select: {
+              id: true,
+              title: true,
+              company: true,
+              location: true,
+              type: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -317,6 +326,7 @@ router.get("/job/:jobId", authenticateToken, requireEmployer, async (req, res) =
       createdAt: app.createdAt,
       updatedAt: app.updatedAt,
       applicant: app.applicant,
+      job: app.job,
     }));
 
     res.json({

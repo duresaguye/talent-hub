@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../index.js";
+import { authenticateToken, requireAdmin } from "../middleware/auth.js";
 import dotenv from "dotenv";
 dotenv.config();
 const router = express.Router();
@@ -195,19 +196,10 @@ router.post("/login", async (req, res) => {
 });
 
 // Get current user profile
-router.get("/me", async (req, res) => {
+router.get("/me", authenticateToken, async (req, res) => {
   try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({ error: "Access token required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: req.user.id },
       select: {
         id: true,
         firstName: true,
@@ -236,6 +228,89 @@ router.get("/me", async (req, res) => {
     console.error("Get profile error:", error);
     res.status(500).json({
       error: "Failed to get user profile",
+      message: error.message,
+    });
+  }
+});
+
+// Get recent activities for admin dashboard
+router.get("/activities", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+    const limitNum = parseInt(limit);
+
+    // Get recent jobs
+    const recentJobs = await prisma.job.findMany({
+      take: Math.ceil(limitNum / 2),
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        company: true,
+        createdAt: true,
+        createdBy: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    // Get recent users
+    const recentUsers = await prisma.user.findMany({
+      take: Math.ceil(limitNum / 2),
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true,
+      }
+    });
+
+    // Combine and format activities
+    const activities = [];
+
+    // Add job activities
+    recentJobs.forEach(job => {
+      activities.push({
+        id: `job-${job.id}`,
+        type: 'job_posted',
+        title: 'New job posted',
+        description: `${job.title} at ${job.company}`,
+        user: job.createdBy ? `${job.createdBy.firstName} ${job.createdBy.lastName}` : 'Unknown',
+        createdAt: job.createdAt,
+        icon: 'briefcase',
+        color: 'bg-green-500'
+      });
+    });
+
+    // Add user activities
+    recentUsers.forEach(user => {
+      activities.push({
+        id: `user-${user.id}`,
+        type: 'user_registered',
+        title: 'New user registered',
+        description: `${user.firstName} ${user.lastName} (${user.role === 'APPLICANT' ? 'Job Seeker' : user.role})`,
+        user: `${user.firstName} ${user.lastName}`,
+        createdAt: user.createdAt,
+        icon: 'users',
+        color: 'bg-blue-500'
+      });
+    });
+
+    // Sort by creation date and limit to 5 activities
+    const sortedActivities = activities
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+
+    res.json({ activities: sortedActivities });
+  } catch (error) {
+    console.error("Get activities error:", error);
+    res.status(500).json({
+      error: "Failed to fetch activities",
       message: error.message,
     });
   }
