@@ -37,8 +37,8 @@ const isTokenExpired = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Date.now() / 1000;
-    // Add 5 minute buffer - logout if token expires within 5 minutes
-    const bufferTime = 5 * 60; // 5 minutes in seconds
+    // Add 1 hour buffer - logout if token expires within 1 hour for longer sessions
+    const bufferTime = 60 * 60; // 1 hour in seconds
     return payload.exp < (currentTime + bufferTime);
   } catch (error) {
     console.error('Error parsing token:', error);
@@ -140,13 +140,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, [validateToken]);
 
-  // Set up periodic token validation
+  // Set up periodic token validation - less frequent for longer sessions
   useEffect(() => {
     if (!token) return;
 
     const interval = setInterval(() => {
       validateToken();
-    }, 2 * 60 * 1000); // Check every 2 minutes (more frequent)
+    }, 30 * 60 * 1000); // Check every 30 minutes for longer sessions
 
     return () => clearInterval(interval);
   }, [token, validateToken]);

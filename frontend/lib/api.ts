@@ -281,6 +281,10 @@ class ApiClient {
     return this.request<{ application: Application }>(`/applications/${id}`);
   }
 
+  async checkApplicationStatus(jobId: number): Promise<{ hasApplied: boolean; application: Application | null }> {
+    return this.request<{ hasApplied: boolean; application: Application | null }>(`/applications/check/${jobId}`);
+  }
+
   // Users methods
   async getProfile(): Promise<{ user: User }> {
     return this.request<{ user: User }>('/users/profile');
@@ -349,6 +353,27 @@ class ApiClient {
     });
     
     return this.request<{ activities: Activity[] }>(`/auth/activities?${searchParams.toString()}`);
+  }
+
+  // Admin job management methods
+  async adminUpdateJobStatus(id: number, status: string, reason?: string): Promise<{ message: string; job: Job }> {
+    return this.request<{ message: string; job: Job }>(`/jobs/admin/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, reason }),
+    });
+  }
+
+  async adminDeleteJob(id: number): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/jobs/admin/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async adminUpdateJob(id: number, jobData: Partial<Job>): Promise<{ message: string; job: Job }> {
+    return this.request<{ message: string; job: Job }>(`/jobs/admin/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(jobData),
+    });
   }
 }
 

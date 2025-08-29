@@ -95,15 +95,37 @@ export function ApplicantSidebar({ activeTab, onTabChange }: ApplicantSidebarPro
 
       {/* Mobile sidebar */}
       <div className="lg:hidden">
-        <div className="flex items-center justify-between p-4 border-b border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-900">
-          <div className="flex items-center space-x-3">
+        <div className="p-4 border-b border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-900">
+          <div className="flex items-center space-x-3 mb-4">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Applicant Portal</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Career Journey</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Applicant Portal</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Track your job search progress and discover new opportunities</p>
             </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onTabChange(item.id)}
+                  className={cn(
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                    isActive 
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25" 
+                      : "text-slate-700 dark:text-slate-300 bg-indigo-100 dark:bg-indigo-700 hover:bg-indigo-200 dark:hover:bg-indigo-600"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              )
+            })}
           </div>
           
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -111,10 +133,10 @@ export function ApplicantSidebar({ activeTab, onTabChange }: ApplicantSidebarPro
               <Button 
                 variant="outline" 
                 size="sm"
-                className="border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-800"
+                className="mt-4 w-full border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-800"
               >
                 <Menu className="h-4 w-4 mr-2" />
-                Menu
+                More Options
               </Button>
             </SheetTrigger>
             <SheetContent 

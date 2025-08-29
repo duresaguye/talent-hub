@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Eye, Edit, Trash2, Flag, CheckCircle, XCircle } from "lucide-react"
 import { useJobs } from "@/hooks/useJobs"
-import { Job } from "@/lib/api"
+import { Job, apiClient } from "@/lib/api"
+import { toast } from "@/components/ui/use-toast"
 import Link from "next/link"
 
 export function AdminJobsTable() {
@@ -30,21 +31,47 @@ export function AdminJobsTable() {
   }, [searchParams])
 
   const handleApproveJob = async (jobId: number) => {
-    // In a real implementation, you would call an API to approve the job
-    // For now, we'll just refresh the jobs list
-    await fetchJobs(searchParams)
+    try {
+      await apiClient.adminUpdateJobStatus(jobId, 'ACTIVE')
+      toast({ title: "Success", description: "Job approved successfully" })
+      await fetchJobs(searchParams)
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to approve job", variant: "destructive" })
+    }
   }
 
   const handleRejectJob = async (jobId: number) => {
-    // In a real implementation, you would call an API to reject the job
-    // For now, we'll just refresh the jobs list
-    await fetchJobs(searchParams)
+    try {
+      await apiClient.adminUpdateJobStatus(jobId, 'REJECTED')
+      toast({ title: "Success", description: "Job rejected successfully" })
+      await fetchJobs(searchParams)
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to reject job", variant: "destructive" })
+    }
+  }
+
+  const handleFlagJob = async (jobId: number) => {
+    try {
+      await apiClient.adminUpdateJobStatus(jobId, 'FLAGGED', 'Flagged for review by admin')
+      toast({ title: "Success", description: "Job flagged for review" })
+      await fetchJobs(searchParams)
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to flag job", variant: "destructive" })
+    }
   }
 
   const handleDeleteJob = async (jobId: number) => {
-    // In a real implementation, you would call an API to delete the job
-    // For now, we'll just refresh the jobs list
-    await fetchJobs(searchParams)
+    if (!confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return
+    }
+    
+    try {
+      await apiClient.adminDeleteJob(jobId)
+      toast({ title: "Success", description: "Job deleted successfully" })
+      await fetchJobs(searchParams)
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete job", variant: "destructive" })
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -55,6 +82,10 @@ export function AdminJobsTable() {
         return <Badge variant="secondary">Inactive</Badge>
       case "DRAFT":
         return <Badge variant="outline">Draft</Badge>
+      case "FLAGGED":
+        return <Badge className="bg-yellow-100 text-yellow-800">Flagged</Badge>
+      case "REJECTED":
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
     }
@@ -159,20 +190,27 @@ export function AdminJobsTable() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/jobs/${job.id}`}>
+                          <Link href={`/jobs/${job.id}`} className="flex items-center">
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Job
+                        <DropdownMenuItem onClick={() => handleApproveJob(job.id)}>
+                          <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                          Approve Job
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Flag className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem onClick={() => handleRejectJob(job.id)}>
+                          <XCircle className="mr-2 h-4 w-4 text-red-600" />
+                          Reject Job
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleFlagJob(job.id)}>
+                          <Flag className="mr-2 h-4 w-4 text-yellow-600" />
                           Flag for Review
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteJob(job.id)}>
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={() => handleDeleteJob(job.id)}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete Job
                         </DropdownMenuItem>

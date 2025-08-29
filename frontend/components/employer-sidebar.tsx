@@ -107,15 +107,37 @@ export function EmployerSidebar({ activeTab, onTabChange }: EmployerSidebarProps
 
       {/* Mobile sidebar */}
       <div className="lg:hidden">
-        <div className="flex items-center justify-between p-4 border-b border-emerald-200 dark:border-emerald-700 bg-white dark:bg-slate-900">
-          <div className="flex items-center space-x-3">
+        <div className="p-4 border-b border-emerald-200 dark:border-emerald-700 bg-white dark:bg-slate-900">
+          <div className="flex items-center space-x-3 mb-4">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
               <Briefcase className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Employer Hub</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Talent Management</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Employer Hub</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Overview of your hiring activity</p>
             </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onTabChange(item.id)}
+                  className={cn(
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                    isActive 
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25" 
+                      : "text-slate-700 dark:text-slate-300 bg-emerald-100 dark:bg-emerald-700 hover:bg-emerald-200 dark:hover:bg-emerald-600"
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              )
+            })}
           </div>
           
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -123,10 +145,10 @@ export function EmployerSidebar({ activeTab, onTabChange }: EmployerSidebarProps
               <Button 
                 variant="outline" 
                 size="sm"
-                className="border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-800"
+                className="mt-4 w-full border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-800"
               >
                 <Menu className="h-4 w-4 mr-2" />
-                Menu
+                More Options
               </Button>
             </SheetTrigger>
             <SheetContent 

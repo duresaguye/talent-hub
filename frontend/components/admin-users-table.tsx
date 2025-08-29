@@ -12,9 +12,9 @@ import { useAdmin } from "@/hooks/useAdmin"
 import { User } from "@/lib/api"
 
 export function AdminUsersTable() {
-  const { users, loading, error, pagination, fetchAllUsers, updateUseruserType, deleteUser } = useAdmin()
+  const { users, loading, error, pagination, fetchAllUsers, updateUserRole, deleteUser } = useAdmin()
   const [searchParams, setSearchParams] = useState({
-    userType: 'all',
+    role: 'all',
     search: '',
     page: 1,
   })
@@ -22,7 +22,7 @@ export function AdminUsersTable() {
   useEffect(() => {
     const apiParams = {
       ...searchParams,
-      userType: searchParams.userType === 'all' ? '' : searchParams.userType,
+      role: searchParams.role === 'all' ? '' : searchParams.role,
     }
     fetchAllUsers(apiParams)
   }, [searchParams])
@@ -39,8 +39,8 @@ export function AdminUsersTable() {
     await fetchAllUsers(searchParams)
   }
 
-  const handleUpdateUseruserType = async (userId: number, newuserType: string) => {
-    const success = await updateUseruserType(userId, newuserType)
+  const handleUpdateUserRole = async (userId: number, newRole: string) => {
+    const success = await updateUserRole(userId, newRole)
     if (success) {
       await fetchAllUsers(searchParams)
     }
@@ -53,8 +53,8 @@ export function AdminUsersTable() {
     }
   }
 
-  const getuserTypeBadge = (userType: string) => {
-    switch (userType) {
+  const getRoleBadge = (role: string) => {
+    switch (role) {
       case "ADMIN":
         return <Badge variant="destructive">Admin</Badge>
       case "EMPLOYER":
@@ -62,7 +62,7 @@ export function AdminUsersTable() {
       case "APPLICANT":
         return <Badge variant="outline">Job Seeker</Badge>
       default:
-        return <Badge variant="outline">{userType}</Badge>
+        return <Badge variant="outline">{role}</Badge>
     }
   }
 
@@ -128,7 +128,7 @@ export function AdminUsersTable() {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead>userType</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Join Date</TableHead>
               <TableHead>Last Active</TableHead>
               <TableHead>Activity</TableHead>
@@ -151,17 +151,17 @@ export function AdminUsersTable() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{getuserTypeBadge(user.userType)}</TableCell>
+                <TableCell>{getRoleBadge(user.role)}</TableCell>
                 <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>{new Date(user.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  {user.userType === "APPLICANT" && (
+                  {user.role === "APPLICANT" && (
                     <span className="text-sm">{user.applicationsCount || 0} applications</span>
                   )}
-                  {user.userType === "EMPLOYER" && (
+                  {user.role === "EMPLOYER" && (
                     <span className="text-sm">{user.jobsCount || 0} jobs posted</span>
                   )}
-                  {user.userType === "ADMIN" && (
+                  {user.role === "ADMIN" && (
                     <span className="text-sm">Administrator</span>
                   )}
                 </TableCell>
@@ -186,17 +186,17 @@ export function AdminUsersTable() {
                           <Mail className="mr-2 h-4 w-4" />
                           Send Message
                         </DropdownMenuItem>
-                        {user.userType !== "ADMIN" && (
+                        {user.role !== "ADMIN" && (
                           <>
-                            <DropdownMenuItem onClick={() => handleUpdateUseruserType(user.id, "ADMIN")}>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "ADMIN")}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Make Admin
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateUseruserType(user.id, "EMPLOYER")}>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "EMPLOYER")}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Make Employer
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateUseruserType(user.id, "APPLICANT")}>
+                            <DropdownMenuItem onClick={() => handleUpdateUserRole(user.id, "APPLICANT")}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Make Applicant
                             </DropdownMenuItem>

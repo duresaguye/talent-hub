@@ -251,12 +251,12 @@ export default function EmployerDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="flex">
+      <div className="lg:flex">
         <EmployerSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 lg:p-6 p-4">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
+            <div className="mb-6 lg:block hidden">
               <h1 className="text-3xl font-bold text-foreground">
                 {activeTab === "dashboard" && "Dashboard"}
                 {activeTab === "post-job" && "Post a Job"}

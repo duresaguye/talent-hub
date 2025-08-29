@@ -187,11 +187,11 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex">
+      <div className="lg:flex">
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 lg:p-6 p-4">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
+            <div className="mb-8 lg:block hidden">
               <h1 className="text-3xl font-bold">Admin Dashboard</h1>
               <p className="text-muted-foreground">
                 Manage the TalentHub platform and monitor user activity

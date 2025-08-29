@@ -1,6 +1,6 @@
 import express from "express";
 import { prisma } from "../index.js";
-import { authenticateToken, requireEmployer } from "../middleware/auth.js";
+import { authenticateToken, requireEmployer, requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -429,6 +429,130 @@ router.get("/employer/my-jobs", authenticateToken, requireEmployer, async (req, 
     console.error("Get employer jobs error:", error);
     res.status(500).json({
       error: "Failed to fetch employer jobs",
+      message: error.message,
+    });
+  }
+});
+
+// Admin: Update job status (approve/reject/flag)
+router.patch("/admin/:id/status", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    const validStatuses = ["ACTIVE", "INACTIVE", "FLAGGED", "REJECTED"];
+    if (!validStatuses.includes(status.toUpperCase())) {
+      return res.status(400).json({
+        error: "Invalid status",
+        validStatuses,
+      });
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: parseInt(id) },
+      data: { 
+        status: status.toUpperCase(),
+        ...(reason && { adminNotes: reason })
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      message: `Job ${status.toLowerCase()} successfully`,
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("Admin update job status error:", error);
+    res.status(500).json({
+      error: "Failed to update job status",
+      message: error.message,
+    });
+  }
+});
+
+// Admin: Delete job
+router.delete("/admin/:id", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const job = await prisma.job.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    await prisma.job.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.json({ message: "Job deleted successfully by admin" });
+  } catch (error) {
+    console.error("Admin delete job error:", error);
+    res.status(500).json({
+      error: "Failed to delete job",
+      message: error.message,
+    });
+  }
+});
+
+// Admin: Update job details
+router.put("/admin/:id", authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const job = await prisma.job.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Validate job type if provided
+    if (updateData.type) {
+      const validTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"];
+      if (!validTypes.includes(updateData.type.toUpperCase())) {
+        return res.status(400).json({
+          error: "Invalid job type",
+          validTypes,
+        });
+      }
+      updateData.type = updateData.type.toUpperCase();
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      message: "Job updated successfully by admin",
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("Admin update job error:", error);
+    res.status(500).json({
+      error: "Failed to update job",
       message: error.message,
     });
   }

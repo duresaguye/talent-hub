@@ -344,19 +344,19 @@ export default function ApplicantDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="flex">
+      <div className="lg:flex">
         <ApplicantSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 lg:p-6 p-4">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
+            <div className="mb-6 lg:block hidden">
               <h1 className="text-3xl font-bold text-foreground">
                 {activeTab === "dashboard" && "Dashboard"}
                 {activeTab === "applications" && "My Applications"}
               </h1>
               <p className="text-muted-foreground">
-                {activeTab === "dashboard" && "Track your job search progress and discover new opportunities"}
-                {activeTab === "applications" && "View and manage your job applications"}
+                {activeTab === "dashboard" && "Track your job search progress"}
+                {activeTab === "applications" && "View and manage your applications"}
               </p>
             </div>
 

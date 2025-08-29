@@ -8,11 +8,17 @@ export interface Job {
   salary?: string;
   description: string;
   requirements: string;
+  benefits?: string;
   remote: boolean;
-  status: 'ACTIVE' | 'CLOSED' | 'DRAFT';
+  status: 'ACTIVE' | 'CLOSED' | 'DRAFT' | 'FLAGGED' | 'REJECTED' | 'INACTIVE';
   createdAt: string;
   updatedAt: string;
   createdBy: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
+  employer?: {
     id: number;
     firstName: string;
     lastName: string;

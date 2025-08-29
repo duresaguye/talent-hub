@@ -16,15 +16,24 @@ export default function HomePage() {
   const [featuredJobs, setFeaturedJobs] = useState<Job[]>([])
 
   useEffect(() => {
-    // Fetch latest 6 active jobs for featured section
-    fetchJobs({ limit: 6, status: 'ACTIVE' })
+    // Fetch latest 4 active jobs for featured section (recently posted)
+    fetchJobs({ limit: 4, status: 'ACTIVE' })
   }, [])
 
   useEffect(() => {
     if (jobs.length > 0) {
-      setFeaturedJobs(jobs.slice(0, 6))
+      setFeaturedJobs(jobs.slice(0, 4))
     }
   }, [jobs])
+
+  // Helper function to check if job is newly posted (within last 3 days)
+  const isNewlyPosted = (createdAt: string) => {
+    const jobDate = new Date(createdAt)
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - jobDate.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays <= 3
+  }
 
   const formatJobType = (type: string) => {
     return type.replace('_', ' ').toLowerCase()
@@ -114,17 +123,17 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-black text-foreground mb-6 font-heading">
-              Featured Opportunities
+              Latest Job Postings
             </h2>
             <p className="text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Discover hand-picked job opportunities from top companies looking for talented professionals like you.
+              Fresh opportunities from top companies - posted within the last few days.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             {loading ? (
-              // Loading  Stars
-              Array.from({ length: 6 }).map((_, index) => (
+              // Loading skeleton
+              Array.from({ length: 4 }).map((_, index) => (
                 <Card key={index} className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg bg-card/50 backdrop-blur-sm">
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start mb-4">
@@ -152,7 +161,7 @@ export default function HomePage() {
             ) : error ? (
               <div className="col-span-full text-center py-12">
                 <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={() => fetchJobs({ limit: 6, status: 'ACTIVE' })}>
+                <Button onClick={() => fetchJobs({ limit: 4, status: 'ACTIVE' })}>
                   Try Again
                 </Button>
               </div>
@@ -160,13 +169,28 @@ export default function HomePage() {
               featuredJobs.map((job) => (
                 <Card
                   key={job.id}
-                  className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg bg-card/50 backdrop-blur-sm"
+                  className={`group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg relative ${
+                    isNewlyPosted(job.createdAt) 
+                      ? 'bg-gradient-to-br from-green-50/80 via-emerald-50/60 to-teal-50/40 dark:from-green-950/30 dark:via-emerald-950/20 dark:to-teal-950/10 ring-2 ring-green-200/50 dark:ring-green-800/30' 
+                      : 'bg-card/50 backdrop-blur-sm'
+                  }`}
                 >
+                  {isNewlyPosted(job.createdAt) && (
+                    <div className="absolute -top-2 -right-2 z-10">
+                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                        NEW
+                      </div>
+                    </div>
+                  )}
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start mb-4">
                       <Badge
                         variant="secondary"
-                        className="text-xs font-semibold px-3 py-1 bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary border-secondary/20"
+                        className={`text-xs font-semibold px-3 py-1 ${
+                          isNewlyPosted(job.createdAt)
+                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-200 dark:from-green-900/50 dark:to-emerald-900/50 dark:text-green-300 dark:border-green-700'
+                            : 'bg-gradient-to-r from-secondary/20 to-secondary/10 text-secondary border-secondary/20'
+                        }`}
                       >
                         {formatJobType(job.type)}
                       </Badge>
@@ -175,13 +199,23 @@ export default function HomePage() {
                         <span className="text-sm font-bold text-primary">{job.salary || 'Salary not specified'}</span>
                       </div>
                     </div>
-                    <CardTitle className="text-xl font-bold group-hover:text-primary transition-colors duration-200">
+                    <CardTitle className={`text-xl font-bold group-hover:text-primary transition-colors duration-200 ${
+                      isNewlyPosted(job.createdAt) ? 'text-green-700 dark:text-green-300' : ''
+                    }`}>
                       {job.title}
                     </CardTitle>
                     <CardDescription className="flex items-center gap-2 text-muted-foreground font-medium">
                       <MapPin className="h-4 w-4" />
                       {job.company} • {job.location}
                     </CardDescription>
+                    {isNewlyPosted(job.createdAt) && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                          Posted {job.postedDate || 'recently'}
+                        </span>
+                      </div>
+                    )}
                   </CardHeader>
                   <CardContent className="pb-6">
                     <p className="text-muted-foreground mb-6 leading-relaxed line-clamp-3">
@@ -213,11 +247,15 @@ export default function HomePage() {
                   <CardFooter>
                     <Button
                       asChild
-                      className="w-full font-semibold group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-secondary transition-all duration-300 bg-transparent"
-                      variant="outline"
+                      className={`w-full font-semibold transition-all duration-300 ${
+                        isNewlyPosted(job.createdAt)
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl'
+                          : 'group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-secondary bg-transparent'
+                      }`}
+                      variant={isNewlyPosted(job.createdAt) ? "default" : "outline"}
                     >
                       <Link href={`/jobs/${job.id}`}>
-                        View Details
+                        {isNewlyPosted(job.createdAt) ? 'Apply Now' : 'View Details'}
                       </Link>
                     </Button>
                   </CardFooter>

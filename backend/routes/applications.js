@@ -487,6 +487,38 @@ router.get("/:id", authenticateToken, async (req, res) => {
   }
 });
 
+// Check if user has applied to a specific job
+router.get("/check/:jobId", authenticateToken, requireApplicant, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    const application = await prisma.application.findUnique({
+      where: {
+        jobId_applicantId: {
+          jobId: parseInt(jobId),
+          applicantId: req.user.id,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({
+      hasApplied: !!application,
+      application: application || null,
+    });
+  } catch (error) {
+    console.error("Check application error:", error);
+    res.status(500).json({
+      error: "Failed to check application status",
+      message: error.message,
+    });
+  }
+});
+
 // Helper function to format posted date
 function formatPostedDate(date) {
   const now = new Date();

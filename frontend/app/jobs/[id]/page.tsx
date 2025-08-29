@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { ApplicationForm } from "@/components/application-form"
 import { MapPin, Clock, DollarSign, Building2, Users, ArrowLeft, Briefcase, CheckCircle,  Star  } from "lucide-react"
 import { useJob } from "@/hooks/useJobs"
 import { useAuth } from "@/contexts/AuthContext"
+import { apiClient } from "@/lib/api"
 import Link from "next/link"
 
 export default function JobDetailsPage() {
@@ -20,9 +21,40 @@ export default function JobDetailsPage() {
  
   const { user, isAuthenticated, isLoading } = useAuth()
   const [showApplicationForm, setShowApplicationForm] = useState(false)
+  const [applicationStatus, setApplicationStatus] = useState<{
+    hasApplied: boolean;
+    application: any | null;
+    loading: boolean;
+  }>({ hasApplied: false, application: null, loading: true })
 
   const jobId = Number.parseInt(params.id as string)
   const { job, loading, error } = useJob(jobId)
+
+  // Check application status when job loads and user is authenticated
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      if (!jobId || !isAuthenticated || !user || user.role !== 'APPLICANT') {
+        setApplicationStatus({ hasApplied: false, application: null, loading: false })
+        return
+      }
+
+      try {
+        const response = await apiClient.checkApplicationStatus(jobId)
+        setApplicationStatus({
+          hasApplied: response.hasApplied,
+          application: response.application,
+          loading: false
+        })
+      } catch (error) {
+        console.error('Error checking application status:', error)
+        setApplicationStatus({ hasApplied: false, application: null, loading: false })
+      }
+    }
+
+    if (!isLoading) {
+      checkApplicationStatus()
+    }
+  }, [jobId, isAuthenticated, user, isLoading])
 
   const formatJobType = (type: string) => {
     return type.replace('_', ' ').toLowerCase()
@@ -198,12 +230,26 @@ export default function JobDetailsPage() {
                 <CardDescription>Join {job.company} and take your career to the next level</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-              {isLoading ? (
+              {isLoading || applicationStatus.loading ? (
   <Button size="lg" variant="outline" className="w-full" disabled>Loading...</Button>
 ) : isAuthenticated && user?.role === 'APPLICANT' ? (
-  <Button size="lg" className="w-full" onClick={() => setShowApplicationForm(true)}>
-    Apply for This Position
-  </Button>
+  applicationStatus.hasApplied ? (
+    <div className="space-y-2">
+      <Button size="lg" variant="outline" className="w-full" disabled>
+        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+        Already Applied
+      </Button>
+      {applicationStatus.application && (
+        <p className="text-sm text-muted-foreground text-center">
+          Applied on {new Date(applicationStatus.application.createdAt).toLocaleDateString()}
+        </p>
+      )}
+    </div>
+  ) : (
+    <Button size="lg" className="w-full" onClick={() => setShowApplicationForm(true)}>
+      Apply for This Position
+    </Button>
+  )
 ) : isAuthenticated && user?.role !== 'APPLICANT' ? (
   <Button size="lg" variant="outline" className="w-full" disabled>
     {user?.role === 'EMPLOYER' ? 'Employers cannot apply' : 'Not eligible to apply'}
