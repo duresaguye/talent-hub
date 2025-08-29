@@ -1,4 +1,6 @@
-# TalentHub: A Mini Job Portal
+# TalentHub: A Mini Job Portal![Uploading Screenshot (451).png…]()
+
+
 **Building a Platform for Job Seekers and Employers**
 
 [![Frontend](https://img.shields.io/badge/Frontend-Next.js-black)](https://talent-hub-blond.vercel.app/)
