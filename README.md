@@ -1,4 +1,6 @@
-# TalentHub: A Mini Job Portal![Uploading Screenshot (451).png…]()
+![TalentHub Hero](frontend/public/hero.png)
+
+# TalentHub: A Mini Job Portal
 
 
 **Building a Platform for Job Seekers and Employers**
