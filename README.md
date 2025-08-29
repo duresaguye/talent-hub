@@ -209,16 +209,16 @@ NEXT_PUBLIC_API_URL=https://talent-hub-lzvy.onrender.com/api
 For testing purposes, you can use these sample credentials:
 
 **Employer Account:**
-- Email: employer@test.com
-- Password: password123
+- Email: employer@techcorp.com
+- Password: employer123
 
 **Applicant Account:**
-- Email: applicant@test.com  
-- Password: password123
+- Email: applicant@example.com
+- Password: applicant123
 
 **Admin Account:**
-- Email: admin@test.com
-- Password: password123
+- Email:  admin@talenthub.com
+- Password: admin123
 
 ## 🤝 Contributing
 
