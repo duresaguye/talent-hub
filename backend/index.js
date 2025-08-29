@@ -23,35 +23,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001', 
-  'https://talent-hub-blond.vercel.app'
-];
-
-// Add environment origins if they exist
-if (process.env.CORS_ORIGINS) {
-  allowedOrigins.push(...process.env.CORS_ORIGINS.split(','));
-}
-
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.CORS_ORIGINS ? 
+    process.env.CORS_ORIGINS.split(',') : 
+    [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://talent-hub-blond.vercel.app'
+    ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-  preflightContinue: false,
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
