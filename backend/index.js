@@ -24,7 +24,13 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'],
+  origin: process.env.CORS_ORIGINS ? 
+    process.env.CORS_ORIGINS.split(',') : 
+    [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://talent-hub-blond.vercel.app'
+    ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
